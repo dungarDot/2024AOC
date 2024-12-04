@@ -17,10 +17,10 @@ type FailureReason =
     | JumpGreaterThan3 
     | NoChangeBetweenLevels
 
-type ParsingReport = 
+type ParsingReportState = 
     | Starting
     | StillSafe of int * Stability
-    | Unsafe of FailureReason
+    | Failed of FailureReason
 
 type CheckedReport = 
     | Safe of Report * Stability
@@ -37,5 +37,9 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
-let ParseReport unCheckedReport = 
-    let startingState = ReportDetails.Create report
+let ParseReport report state = 
+    match state with 
+    | Starting -> ()
+    | StillSafe (previous, stab) -> ()
+    | Failed failReason -> ()
+
