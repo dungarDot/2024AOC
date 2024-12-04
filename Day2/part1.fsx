@@ -4,35 +4,32 @@ open System.IO
 
 type Level = int 
 type Report  = Level array 
-type Reports = Report list
+type UnCheckedReport  = Report
+type UnCheckedReports = UnCheckedReport list
 
 type Stability =
     | StartingStability
     | Increasing
     | Decreasing
 
-type Reason =
+type FailureReason =
     | Unstable
     | JumpGreaterThan3 
-    | NoChange
+    | NoChangeBetweenLevels
 
-type ReportSafety = 
-    | Unchecked
-    | Safe
-    | Unsafe of Reason
+type ParsingReport = 
+    | Starting
+    | StillSafe of int * Stability
+    | Unsafe of FailureReason
 
-type ReportDetails =
-    {   Report:Report
-        Safety: ReportSafety
-        Stability: Stability }
+type CheckedReport = 
+    | Safe of Report * Stability
+    | Unsafe of FailureReason
 
-module ReportDetails = 
-    let Create report =
-        {   Report = report 
-            Safety = Unchecked 
-            Stability = StartingStability }
-            
-let reports : Reports = 
+// I'm keeping the stability value on the assumption that if this were a real project you wouldn't want to just discard that data.
+
+
+let unCheckedReports : UnCheckedReports = 
     File.ReadAllLines "./Day2/input.txt"
     |> Seq.map(fun line ->
         line.Split(" ")
@@ -40,5 +37,5 @@ let reports : Reports =
     )
     |> Seq.toList
 
-let ParseReport report = 
+let ParseReport unCheckedReport = 
     let startingState = ReportDetails.Create report
