@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "1QmzrOpp8/c=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\regul\\code\\2024AOC\\2024AOC.fsproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\regul\\.nuget\\packages\\fsharp.core\\9.0.100-beta.24466.6\\fsharp.core.9.0.100-beta.24466.6.nupkg.sha512"
+  ],
+  "logs": []
+}
