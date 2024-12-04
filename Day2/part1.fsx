@@ -5,26 +5,33 @@ open System.IO
 type Level = int 
 type Report  = Level array 
 type Reports = Report list
-type EscalationState =
-    | Starting
+
+type Stability =
+    | StartingStability
     | Increasing
     | Decreasing
-    | Invalid
 
-type JumpState = 
-    | Valid
-    | InvalidNoDifference
-    | InvalidJumpGreaterThan3
+type Reason =
+    | Unstable
+    | JumpGreaterThan3 
+    | NoChange
+
+type ReportSafety = 
+    | Unchecked
+    | Safe
+    | Unsafe of Reason
 
 type ReportDetails =
     {   Report:Report
-        EscalationState: EscalationState
-        JumpState: JumpState }
+        Safety: ReportSafety
+        Stability: Stability }
 
-type ReportResult = 
-    | Safe of ReportDetails
-    | Unsafe of ReportDetails
-
+module ReportDetails = 
+    let Create report =
+        {   Report = report 
+            Safety = Unchecked 
+            Stability = StartingStability }
+            
 let reports : Reports = 
     File.ReadAllLines "./Day2/input.txt"
     |> Seq.map(fun line ->
@@ -32,3 +39,6 @@ let reports : Reports =
         |> Array.map int 
     )
     |> Seq.toList
+
+let ParseReport report = 
+    let startingState = ReportDetails.Create report
