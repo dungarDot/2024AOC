@@ -3,7 +3,7 @@ open System.IO
 // Shooting for a more DDD approach.  We'll see how much I stick with it.
 
 type Level = int 
-type Report  = Level array 
+type Report  = Level list 
 type UnCheckedReport  = Report
 type UnCheckedReports = UnCheckedReport list
 
@@ -19,7 +19,7 @@ type FailureReason =
 
 type ParsingReportState = 
     | Starting
-    | StillSafe of int * Stability
+    | StillSafe of Level * Stability
     | Failed of FailureReason
 
 type CheckedReport = 
@@ -28,18 +28,19 @@ type CheckedReport =
 
 // I'm keeping the stability value on the assumption that if this were a real project you wouldn't want to just discard that data.
 
-
 let unCheckedReports : UnCheckedReports = 
     File.ReadAllLines "./Day2/input.txt"
     |> Seq.map(fun line ->
         line.Split(" ")
         |> Array.map int 
+        |> Array.toList
     )
     |> Seq.toList
 
-let ParseReport report state = 
+let rec parseReport (report:Report) state = 
     match state with 
-    | Starting -> ()
+    | Starting -> 
+        parseReport report.Tail (StillSafe (report.Head, StartingStability))  
     | StillSafe (previous, stab) -> ()
     | Failed failReason -> ()
 
