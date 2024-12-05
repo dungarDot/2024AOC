@@ -18,13 +18,17 @@ type FailureReason =
     | NoChangeBetweenLevels
 
 type ParsingReportState = 
-    | Starting of Report
-    | StillSafe of 
-        {|  RemainingReport:Report
-            PreviousLevel: Level
-            Stability: Stability
-            OriginalReport:Report|} 
-    | Failed of Report * FailureReason
+    {   RemainingReport:Report
+        PreviousLevel: Level
+        Stability: Stability
+        OriginalReport:Report } 
+
+module ParsingReportState =
+    let Create (report: UnCheckedReport) =
+        {   RemainingReport = report.Tail
+            PreviousLevel = report.Head
+            Stability = StartingStability
+            OriginalReport = report }
 
 type CheckedReport = 
     | Safe of Report * Stability
@@ -42,29 +46,14 @@ let unCheckedReports : UnCheckedReports =
     |> Seq.toList
 
 let rec parseReport state = 
-    match state with 
-    | Starting startingReport -> 
-        let initState = 
-            StillSafe {|
-                RemainingReport = startingReport.Tail
-                PreviousLevel = startingReport.Head
-                Stability = StartingStability
-                OriginalReport = startingReport |}
+    let currentLevel, remainingReport = state.RemainingReport.Head, state.RemainingReport.Tail
+    let levelDiff = abs (currentLevel - state.PreviousLevel)
+    if levelDiff = 0 then 
+        Unsafe (state.OriginalReport, NoChangeBetweenLevels)
+    elif levelDiff > 3 then
+        Unsafe (state.OriginalReport, JumpGreaterThan3)
+    else 
+        parseReport { state with RemainingReport = remainingReport }
 
-        parseReport initState
 
-    | StillSafe currentState -> 
-        match currentState.RemainingReport with 
-        | currentLevel::remainingReport -> 
-            let levelDiff = abs (currentLevel - currentState.PreviousLevel)
-            if levelDiff = 0 then 
-                Unsafe (currentState.OriginalReport, NoChangeBetweenLevels)
-            else 
-                let newState = StillSafe {| currentState with RemainingReport = remainingReport |}
-                parseReport newState
-
-        | [] -> Safe (currentState.OriginalReport, currentState.Stability)
-    | _ -> 
-        let message = sprintf "impossible match of %A" state
-        failwith message
 
