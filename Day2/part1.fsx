@@ -11,11 +11,16 @@ type Stability =
     | StartingStability
     | Increasing
     | Decreasing
-
-type FailureReason =
     | Unstable
-    | JumpGreaterThan3 
+
+type LevelVolatility =
+    | JumpGreaterThan3
     | NoChangeBetweenLevels
+
+type FailureReasons =
+    | Unstable
+    | Volatile of LevelVolatility
+    | UnstableAndVolatile of LevelVolatility
 
 type ParsingReportState = 
     {   RemainingReport:Report
@@ -30,11 +35,10 @@ module ParsingReportState =
             Stability = StartingStability
             OriginalReport = report }
 
+// I'm keeping the stability value on the assumption that if this were a real project you wouldn't want to just discard that data.
 type CheckedReport = 
     | Safe of Report * Stability
-    | Unsafe of Report * FailureReason
-
-// I'm keeping the stability value on the assumption that if this were a real project you wouldn't want to just discard that data.
+    | Unsafe of Report * FailureReasons
 
 let unCheckedReports : UnCheckedReports = 
     File.ReadAllLines "./Day2/input.txt"
@@ -45,15 +49,15 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
+let checkValidity current previous =
+    let diff = abs(current - previous)
+    diff
 let rec parseReport state = 
     let currentLevel, remainingReport = state.RemainingReport.Head, state.RemainingReport.Tail
     let levelDiff = abs (currentLevel - state.PreviousLevel)
     if levelDiff = 0 then 
-        Unsafe (state.OriginalReport, NoChangeBetweenLevels)
+        parseReport { state with RemainingReport = remainingReport }
     elif levelDiff > 3 then
-        Unsafe (state.OriginalReport, JumpGreaterThan3)
+        parseReport { state with RemainingReport = remainingReport }
     else 
         parseReport { state with RemainingReport = remainingReport }
-
-
-
