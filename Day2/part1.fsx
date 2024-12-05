@@ -18,13 +18,17 @@ type FailureReason =
     | NoChangeBetweenLevels
 
 type ParsingReportState = 
-    | Starting
-    | StillSafe of Level * Stability
-    | Failed of FailureReason
+    | Starting of Report
+    | StillSafe of 
+        {|  RemainingReport:Report
+            PreviousLevel: Level
+            Stability: Stability
+            OriginalReport:Report|} 
+    | Failed of Report * FailureReason
 
 type CheckedReport = 
     | Safe of Report * Stability
-    | Unsafe of FailureReason
+    | Unsafe of Report * FailureReason
 
 // I'm keeping the stability value on the assumption that if this were a real project you wouldn't want to just discard that data.
 
@@ -37,10 +41,28 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
-let rec parseReport (report:Report) state = 
+let rec parseReport state = 
     match state with 
-    | Starting -> 
-        parseReport report.Tail (StillSafe (report.Head, StartingStability))  
-    | StillSafe (previous, stab) -> ()
-    | Failed failReason -> ()
+    | Starting startingReport -> 
+        let initState = 
+            StillSafe {|
+                RemainingReport = startingReport.Tail
+                PreviousLevel = startingReport.Head
+                Stability = StartingStability
+                OriginalReport = startingReport |}
+
+        parseReport initState
+
+    | StillSafe currentState -> 
+        match currentState.RemainingReport with 
+        | currentLevel::remainingReport -> 
+            let levelDiff = abs (currentLevel - currentState.PreviousLevel)
+            if levelDiff = 0 then 
+                Unsafe (currentState.OriginalReport, NoChangeBetweenLevels)
+            else 
+                parseReport remainingReport StillSafe(currentState)
+
+        | [] -> Safe (currentState.OriginalReport, currentState.Stability)
+    | _ -> 
+        failwith "impossible match of %A" state
 
