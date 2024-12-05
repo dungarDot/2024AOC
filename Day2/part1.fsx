@@ -60,9 +60,11 @@ let rec parseReport state =
             if levelDiff = 0 then 
                 Unsafe (currentState.OriginalReport, NoChangeBetweenLevels)
             else 
-                parseReport remainingReport StillSafe(currentState)
+                let newState = StillSafe {| currentState with RemainingReport = remainingReport |}
+                parseReport newState
 
         | [] -> Safe (currentState.OriginalReport, currentState.Stability)
     | _ -> 
-        failwith "impossible match of %A" state
+        let message = sprintf "impossible match of %A" state
+        failwith message
 
