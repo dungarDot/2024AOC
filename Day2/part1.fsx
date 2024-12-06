@@ -45,7 +45,7 @@ type LevelVolatility =
     | NoChangeBetweenLevels
 
 module LevelVolatility =
-    let (|CheckType|) (current:Level, previous:Level) : LevelVolatility =
+    let (|Check|) (current:Level, previous:Level) : LevelVolatility =
         let diff = abs(current - previous)
         if diff = 0 then 
             NoChangeBetweenLevels
@@ -131,7 +131,7 @@ let rec parseReport state =
     let stability = Stability.Verify currentLevel state.PreviousLevel state.Stability
     let volatility = 
         match (currentLevel, state.PreviousLevel) with 
-        | LevelVolatility.CheckType lv -> lv
+        | LevelVolatility.Check lv -> lv
 
     checkSafety stability volatility state currentLevel state.PreviousLevel parseReport
 
