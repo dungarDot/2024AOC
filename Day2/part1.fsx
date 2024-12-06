@@ -78,9 +78,13 @@ module CheckedReport =
     let ToString result = 
         match result with 
         | Safe (r,s) -> 
-            r |> List.map string |> String.concat ", " 
+            let report =
+                r |> List.map string |> String.concat ", " 
+            sprintf "%s | %s" report (s.ToString())
         | Unsafe (r, f ) ->
-            r |> List.map string |> String.concat ", " 
+            let report =
+                r |> List.map string |> String.concat ", "
+            sprintf "%s | %s" report (f.ToString()) 
 
 let unCheckedReports : UnCheckedReports = 
     File.ReadAllLines "./Day2/input.txt"
