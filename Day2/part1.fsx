@@ -97,6 +97,8 @@ let errorsFalseSafe =
 let rec parseReport state = 
     let currentState = {state with RemainingReport = state.RemainingReport.Tail}
     let currentLevel= state.RemainingReport.Head
+    printfn "%A" currentState
+    printfn "%A" currentLevel
 
     let stability = Stability.Verify currentLevel currentState.PreviousLevel currentState.Stability
     let volatility = LevelVolatility.Verify currentLevel currentState.PreviousLevel
@@ -119,7 +121,7 @@ let rec parseReport state =
         else 
             parseReport { currentState with Stability = stability }
 
-unCheckedReports
+errorsFalseSafe
 |> List.map (ParsingReportState.Create >> parseReport)
 |> List.filter(fun result ->
     match result with 
