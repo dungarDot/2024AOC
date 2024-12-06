@@ -128,11 +128,4 @@ let rec parseReport state =
             parseReport { currentState with Stability = stability }
 
 unCheckedReports
-|> List.map ParsingReportState.Create
-|> List.map parseReport
-|> List.filter(fun result -> 
-    match result with 
-    | Safe (_,s) -> 
-        if s = StartingStability then true else false
-    | _ -> false
-)
+|> List.map (ParsingReportState.Create >> parseReport)
