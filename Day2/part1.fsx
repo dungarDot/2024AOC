@@ -1,6 +1,7 @@
 open System.IO
 
 // Shooting for a more DDD approach.  We'll see how much I stick with it.
+// Not going to handle checking that report length is > 0/x as i'd do that before all this.
 
 type Level = int 
 type Report  = Level list 
@@ -30,7 +31,7 @@ module Stability =
         | Increasing -> stabLogic current previous Increasing Decreasing Increasing
         | Decreasing -> stabLogic current previous Unstable Decreasing Decreasing
         | Unstable
-        | NoMovement -> failwith "should not match?"
+        | NoMovement -> failwith "matched Unstable/NoMovement on the Stability verify."
 
 // Allows invalid states grrrr.
 type LevelVolatility =
@@ -50,7 +51,7 @@ module LevelVolatility =
             WithinBounds
 
 type FailureReasons =
-    | Unstable
+    | UnsafeStability
     | Volatile of LevelVolatility
     | UnstableAndVolatile of LevelVolatility
 
@@ -81,17 +82,26 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
-let checkSafety current previous =
-    let volatility = LevelVolatility.Verify current previous
-    
-    volatility
-    
 let rec parseReport state = 
-    let currentLevel, remainingReport = state.RemainingReport.Head, state.RemainingReport.Tail
-    let levelDiff = abs (currentLevel - state.PreviousLevel)
-    if levelDiff = 0 then 
-        parseReport { state with RemainingReport = remainingReport }
-    elif levelDiff > 3 then
-        parseReport { state with RemainingReport = remainingReport }
-    else 
-        parseReport { state with RemainingReport = remainingReport }
+    let currentState = {state with RemainingReport = state.RemainingReport.Tail}
+    let currentLevel= state.RemainingReport.Head
+    let stability = Stability.Verify currentLevel state.PreviousLevel state.Stability
+    let volatility = LevelVolatility.Verify currentLevel state.PreviousLevel
+
+    match stability, volatility with 
+    // Error states, ideally should refactor so these aren't even possible
+    | StartingStability, _ -> failwith "matched starting stability on the parseReport function which should not be possible"
+    | NoMovement, WithinBounds -> failwith "matched NoMovement, WithinBounds which should not be possible"
+    // Unsafe states
+    | Unstable , JumpGreaterThan3
+    | Unstable, NoChangeBetweenLevels  -> Unsafe(state.OriginalReport, UnstableAndVolatile volatility)
+    | Unstable, WithinBounds -> Unsafe(state.OriginalReport, UnsafeStability)
+    | _, JumpGreaterThan3 -> Unsafe(state.OriginalReport, Volatile volatility)
+    | _, NoChangeBetweenLevels -> Unsafe(state.OriginalReport, Volatile volatility)
+    // Safe states
+    | Increasing, WithinBounds
+    | Decreasing, WithinBounds -> 
+        if currentState.RemainingReport.Length = 0 then 
+            Safe (currentState.OriginalReport, currentState.Stability)
+        else 
+            parseReport currentState
