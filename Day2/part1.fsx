@@ -74,6 +74,12 @@ type CheckedReport =
     | Safe of Report * Stability
     | Unsafe of Report * FailureReasons
 
+module CheckedReport = 
+    let ToString result = 
+        match result with 
+        | Safe (r,s) -> r.ToString()
+        | Unsafe (r, f ) -> r.ToString()
+
 let unCheckedReports : UnCheckedReports = 
     File.ReadAllLines "./Day2/input.txt"
     |> Seq.map(fun line ->
@@ -115,13 +121,11 @@ let rec parseReport state =
     let volatility = LevelVolatility.Verify currentLevel state.PreviousLevel
     checkSafety stability volatility state currentLevel parseReport
 
-unCheckedReports
-|> List.map (ParsingReportState.Create >> parseReport)
-// |> List.filter(fun result ->
-//     match result with 
-//     | Safe _ -> false
-//     | Unsafe (a, b) -> 
-//         match b with
-//         | UnstableAndVolatile _ -> true 
-//         | _ -> false
-// )
+let output =
+    unCheckedReports
+    |> List.map (
+            ParsingReportState.Create 
+            >> parseReport
+            >> CheckedReport.ToString)
+
+File.WriteAllLines("./Day2/output.txt", output)
