@@ -82,6 +82,26 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
+let errorCheckStartingStability = 
+    [
+        [9; 10; 11; 12; 11; 8]
+        [41; 38; 39; 40; 43; 42; 44; 44]
+        [44; 43; 43; 45; 46; 46]
+        [86; 84; 85; 85; 89]
+        [59; 60; 57; 58; 56; 56]
+        [61; 64; 62; 59; 62; 58]
+        [76; 77; 74; 74; 77]
+        [8; 10; 10; 9; 6; 6]
+        [62; 59; 60; 61; 64; 64]
+        [11; 10; 10; 13; 13]
+        [31; 29; 33; 34; 34]
+        [69; 71; 68; 67; 68; 70]
+        [32; 34; 33; 35; 31]
+        [14; 15; 15; 13; 12]
+        [10; 7; 8; 8; 7]
+        [56; 57; 54; 55; 55]
+        [94; 95; 93; 91; 93]
+    ]
 let rec parseReport state = 
     let currentState = {state with RemainingReport = state.RemainingReport.Tail}
     let currentLevel= state.RemainingReport.Head
@@ -109,3 +129,9 @@ let rec parseReport state =
 unCheckedReports
 |> List.map ParsingReportState.Create
 |> List.map parseReport
+|> List.filter(fun result -> 
+    match result with 
+    | Safe (_,s) -> 
+        if s = StartingStability then true else false
+    | _ -> false
+)
