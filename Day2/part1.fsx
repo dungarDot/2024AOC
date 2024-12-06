@@ -105,3 +105,6 @@ let rec parseReport state =
             Safe (currentState.OriginalReport, currentState.Stability)
         else 
             parseReport currentState
+
+unCheckedReports
+|> List.map ParsingReportState.Create
