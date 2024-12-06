@@ -112,11 +112,7 @@ let rec parseReport state =
     printfn "%A" (currentLevel, state)
     
     let stability = Stability.Verify currentLevel state.PreviousLevel state.Stability
-    let volatility = 
-        if state.Stability <> StartingStability then 
-            LevelVolatility.Verify currentLevel state.PreviousLevel
-        else 
-            WithinBounds
+    let volatility = LevelVolatility.Verify currentLevel state.PreviousLevel
     checkSafety stability volatility state currentLevel parseReport
 
 unCheckedReports
