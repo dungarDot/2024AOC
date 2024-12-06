@@ -105,8 +105,9 @@ let errorCheckStartingStability =
 let rec parseReport state = 
     let currentState = {state with RemainingReport = state.RemainingReport.Tail}
     let currentLevel= state.RemainingReport.Head
-    let stability = Stability.Verify currentLevel state.PreviousLevel state.Stability
-    let volatility = LevelVolatility.Verify currentLevel state.PreviousLevel
+
+    let stability = Stability.Verify currentLevel currentState.PreviousLevel currentState.Stability
+    let volatility = LevelVolatility.Verify currentLevel currentState.PreviousLevel
 
     match stability, volatility with 
     // Error states, ideally should refactor so these aren't even possible
@@ -114,17 +115,17 @@ let rec parseReport state =
     | NoMovement, WithinBounds -> failwith "matched NoMovement, WithinBounds which should not be possible"
     // Unsafe states
     | Unstable , JumpGreaterThan3
-    | Unstable, NoChangeBetweenLevels  -> Unsafe(state.OriginalReport, UnstableAndVolatile volatility)
-    | Unstable, WithinBounds -> Unsafe(state.OriginalReport, UnsafeStability)
-    | _, JumpGreaterThan3 -> Unsafe(state.OriginalReport, Volatile volatility)
-    | _, NoChangeBetweenLevels -> Unsafe(state.OriginalReport, Volatile volatility)
+    | Unstable, NoChangeBetweenLevels  -> Unsafe(currentState.OriginalReport, UnstableAndVolatile volatility)
+    | Unstable, WithinBounds -> Unsafe(currentState.OriginalReport, UnsafeStability)
+    | _, JumpGreaterThan3 -> Unsafe(currentState.OriginalReport, Volatile volatility)
+    | _, NoChangeBetweenLevels -> Unsafe(currentState.OriginalReport, Volatile volatility)
     // Safe states
     | Increasing, WithinBounds
     | Decreasing, WithinBounds -> 
         if currentState.RemainingReport.Length = 0 then 
             Safe (currentState.OriginalReport, currentState.Stability)
         else 
-            parseReport currentState
+            parseReport { currentState with Stability = stability }
 
 unCheckedReports
 |> List.map ParsingReportState.Create
