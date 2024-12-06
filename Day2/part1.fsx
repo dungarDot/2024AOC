@@ -28,7 +28,7 @@ module Stability =
     let Verify current previous stability =
         match stability with 
         | StartingStability -> stabLogic current previous Increasing Decreasing NoMovement
-        | Increasing -> stabLogic current previous Increasing Decreasing Increasing
+        | Increasing -> stabLogic current previous Increasing Unstable Increasing
         | Decreasing -> stabLogic current previous Unstable Decreasing Decreasing
         | Unstable
         | NoMovement -> failwith "matched Unstable/NoMovement on the Stability verify."
@@ -63,8 +63,9 @@ type ParsingReportState =
 
 module ParsingReportState =
     let Create (report: UnCheckedReport) =
-        {   RemainingReport = report
-            PreviousLevel = 0
+        let previousLevel  = report.Head
+        {   RemainingReport = report.Tail
+            PreviousLevel = previousLevel
             Stability = StartingStability
             OriginalReport = report }
 
@@ -108,32 +109,27 @@ let checkSafety  stability volatility state currentLevel f =
     // Safe states
     | Increasing, WithinBounds
     | Decreasing, WithinBounds -> 
-        if state.RemainingReport.Length = 0 then 
+        if state.RemainingReport.Length = 1 then 
             Safe (state.OriginalReport, state.Stability)
         else 
-            f { state with Stability = stability; PreviousLevel = currentLevel }
+            let newState = 
+                { state with 
+                    Stability = stability
+                    PreviousLevel = currentLevel
+                    RemainingReport = state.RemainingReport.Tail }
+            f newState
 
 let rec parseReport state = 
-    printfn "%A" state
-    let currentLevel, newState =
-        if state.Stability = StartingStability then
-            state.OriginalReport.Tail.Head,
-            { state with 
-                PreviousLevel = state.OriginalReport.Head
-                RemainingReport = state.OriginalReport.Tail
-                }
-        else
-            state.RemainingReport.Tail.Head, { state with RemainingReport = state.RemainingReport.Tail }
+    let currentLevel = state.RemainingReport.Head
+    printfn "%A" (currentLevel, state)
     
-    printfn "%A" (currentLevel, newState)
-
-    let stability = Stability.Verify currentLevel newState.PreviousLevel newState.Stability
+    let stability = Stability.Verify currentLevel state.PreviousLevel state.Stability
     let volatility = 
-        if newState.Stability <> StartingStability then 
-            LevelVolatility.Verify currentLevel newState.PreviousLevel
+        if state.Stability <> StartingStability then 
+            LevelVolatility.Verify currentLevel state.PreviousLevel
         else 
             WithinBounds
-    checkSafety stability volatility newState currentLevel parseReport
+    checkSafety stability volatility state currentLevel parseReport
 
 errorsFalseSafe
 |> List.map (ParsingReportState.Create >> parseReport)
