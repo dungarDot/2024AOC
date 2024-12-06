@@ -53,7 +53,7 @@ module LevelVolatility =
 type FailureReasons =
     | UnsafeStability
     | Volatile of LevelVolatility
-    | UnstableAndVolatile of LevelVolatility
+    | UnstableAndJumpGreaterThan3
 
 type ParsingReportState = 
     {   RemainingReport:Report
@@ -102,7 +102,7 @@ let checkSafety  stability volatility state currentLevel f =
     | NoMovement, WithinBounds -> failwith "matched NoMovement, WithinBounds which should not be possible"
     // Unsafe states
     | Unstable , JumpGreaterThan3
-    | Unstable, NoChangeBetweenLevels  -> Unsafe(state.OriginalReport, UnstableAndVolatile volatility)
+    | Unstable, NoChangeBetweenLevels  -> Unsafe(state.OriginalReport, UnstableAndJumpGreaterThan3)
     | Unstable, WithinBounds -> Unsafe(state.OriginalReport, UnsafeStability)
     | _, JumpGreaterThan3 -> Unsafe(state.OriginalReport, Volatile volatility)
     | _, NoChangeBetweenLevels -> Unsafe(state.OriginalReport, Volatile volatility)
