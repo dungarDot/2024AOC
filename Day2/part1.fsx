@@ -82,6 +82,18 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
+let errorsFalseSafe = 
+    [
+        [9; 10; 11; 12; 11; 8]
+        [59; 60; 57; 58; 56; 56]
+        [8; 10; 10; 9; 6; 6]
+        [32; 34; 33; 35; 31]
+        [14; 15; 15; 13; 12]
+        [10; 7; 8; 8; 7]
+        [56; 57; 54; 55; 55]
+        [94; 95; 93; 91; 93]
+    ]
+
 let rec parseReport state = 
     let currentState = {state with RemainingReport = state.RemainingReport.Tail}
     let currentLevel= state.RemainingReport.Head
@@ -114,4 +126,4 @@ unCheckedReports
     | Safe _ -> true 
     | Unsafe _ -> false
 )
-|> List.length
+
