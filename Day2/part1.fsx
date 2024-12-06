@@ -17,25 +17,26 @@ type Stability =
 
 module Stability = 
     // make active pattern?
-    let private stabLogic current previous greaterOutcome lesserOutcome sameOutcome =
-        if current > previous then 
-            greaterOutcome
-        elif current < previous then 
-            lesserOutcome
-        else 
-            sameOutcome
 
-    let Verify current previous stability =
+    let (|Check|) (current, previous, stability) =
+        let stabLogic current previous greaterOutcome lesserOutcome sameOutcome =
+            if current > previous then 
+                greaterOutcome
+            elif current < previous then 
+                lesserOutcome
+            else 
+                sameOutcome
+
         match stability with 
-        | StartingStability -> 
-            // This currently exists but probably should be removed as the data isn't saved anyways and can't output, but the this branch does occur.
-            // Ideal output probably does carry this all the way through so you can see the "state" of the report when you're done and why it failed.
-            // Thus need to refactor the safe/unsafe returns to likely include state.
-            stabLogic current previous Increasing Decreasing NoMovement  
+        | StartingStability -> stabLogic current previous Increasing Decreasing NoMovement  
         | Increasing -> stabLogic current previous Increasing Unstable Increasing
         | Decreasing -> stabLogic current previous Unstable Decreasing Decreasing
         | Unstable
         | NoMovement -> failwith "matched Unstable/NoMovement on the Stability verify."
+
+    let Verify current previous stability : Stability =
+        match (current, previous, stability) with
+        | Check result -> result
 
 // Allows invalid states grrrr.
 type LevelVolatility =
@@ -44,7 +45,7 @@ type LevelVolatility =
     | NoChangeBetweenLevels
 
 module LevelVolatility =
-    let (|CheckType|) (current:Level, previous:Level) : LevelVolatility =
+    let (|Check|) (current:Level, previous:Level) : LevelVolatility =
         let diff = abs(current - previous)
         if diff = 0 then 
             NoChangeBetweenLevels
@@ -128,7 +129,7 @@ let rec parseReport state =
     let stability = Stability.Verify currentLevel state.PreviousLevel state.Stability
     let volatility = 
         match (currentLevel, state.PreviousLevel) with 
-        | LevelVolatility.CheckType lv -> lv
+        | LevelVolatility.Check lv -> lv
 
     checkSafety stability volatility state currentLevel state.PreviousLevel parseReport
 
