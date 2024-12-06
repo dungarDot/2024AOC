@@ -108,3 +108,4 @@ let rec parseReport state =
 
 unCheckedReports
 |> List.map ParsingReportState.Create
+|> List.map parseReport
