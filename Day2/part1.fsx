@@ -63,8 +63,8 @@ type ParsingReportState =
 
 module ParsingReportState =
     let Create (report: UnCheckedReport) =
-        {   RemainingReport = report.Tail
-            PreviousLevel = report.Head
+        {   RemainingReport = report
+            PreviousLevel = 0
             Stability = StartingStability
             OriginalReport = report }
 
@@ -85,13 +85,13 @@ let unCheckedReports : UnCheckedReports =
 let errorsFalseSafe : UnCheckedReports = 
     [
         [9; 10; 11; 12; 11; 8]
-        [59; 60; 57; 58; 56; 56]
-        [8; 10; 10; 9; 6; 6]
-        [32; 34; 33; 35; 31]
-        [14; 15; 15; 13; 12]
-        [10; 7; 8; 8; 7]
-        [56; 57; 54; 55; 55]
-        [94; 95; 93; 91; 93]
+        // [59; 60; 57; 58; 56; 56]
+        // [8; 10; 10; 9; 6; 6]
+        // [32; 34; 33; 35; 31]
+        // [14; 15; 15; 13; 12]
+        // [10; 7; 8; 8; 7]
+        // [56; 57; 54; 55; 55]
+        // [94; 95; 93; 91; 93]
     ]
 
 let rec parseReport state = 
@@ -102,6 +102,9 @@ let rec parseReport state =
 
     let stability = Stability.Verify currentLevel currentState.PreviousLevel currentState.Stability
     let volatility = LevelVolatility.Verify currentLevel currentState.PreviousLevel
+
+    printfn "%A" stability
+    printfn "%A" volatility
 
     match stability, volatility with 
     // Error states, ideally should refactor so these aren't even possible
