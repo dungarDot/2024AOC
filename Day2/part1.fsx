@@ -119,8 +119,9 @@ unCheckedReports
 |> List.map (ParsingReportState.Create >> parseReport)
 |> List.filter(fun result ->
     match result with 
-    | Safe _ -> true 
-    | Unsafe _ -> false
+    | Safe _ -> false
+    | Unsafe (a, b) -> 
+        match b with
+        | UnstableAndVolatile _ -> true 
+        | _ -> false
 )
-|> List.length
-
