@@ -12,7 +12,40 @@ type Stability =
     | Increasing
     | Decreasing
     | Unstable
+    | NoMovement // for tracking the error state of instantly passing two values that are the same.
 
+module Stability = 
+    // make active pattern?
+    let private stabLogic current previous greater lesser same =
+        if current > previous then 
+            greater 
+
+    let Verify current previous stability =
+        match stability with 
+        | StartingStability -> 
+            if current > previous then 
+                Increasing
+            elif current < previous then 
+                Decreasing
+            else 
+                NoMovement
+        | Increasing -> 
+            if current > previous then 
+                Increasing
+            elif current < previous then 
+                Unstable
+            else 
+                Increasing // Can only return no movement on the first parse as keeping the previous state would be the most useful information otherwise.
+        | Decreasing -> 
+            if current > previous then 
+                Unstable
+            elif current < previous then 
+                Decreasing
+            else 
+                Decreasing 
+        | Unstable -> failwith "should not match?"
+
+// Allows invalid states grrrr.
 type LevelVolatility =
     | WithinBounds
     | JumpGreaterThan3
