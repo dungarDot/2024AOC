@@ -14,8 +14,20 @@ type Stability =
     | Unstable
 
 type LevelVolatility =
+    | WithinBounds
     | JumpGreaterThan3
     | NoChangeBetweenLevels
+
+module LevelVolatility =
+    // Make active pattern?
+    let Verify current previous  =
+        let diff = abs(current - previous)
+        if diff = 0 then 
+            NoChangeBetweenLevels
+        elif diff > 3 then 
+            JumpGreaterThan3
+        else
+            WithinBounds
 
 type FailureReasons =
     | Unstable
@@ -49,9 +61,11 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
-let checkValidity current previous =
-    let diff = abs(current - previous)
-    diff
+let checkSafety current previous =
+    let volatility = LevelVolatility.Verify current previous
+    
+    volatility
+    
 let rec parseReport state = 
     let currentLevel, remainingReport = state.RemainingReport.Head, state.RemainingReport.Tail
     let levelDiff = abs (currentLevel - state.PreviousLevel)
