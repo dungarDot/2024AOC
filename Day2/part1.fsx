@@ -109,7 +109,7 @@ let checkSafety  stability volatility state currentLevel f =
 
 let rec parseReport state = 
     let currentLevel = state.RemainingReport.Head
-    printfn "%A" (currentLevel, state)
+    // printfn "%A" (currentLevel, state)
     
     let stability = Stability.Verify currentLevel state.PreviousLevel state.Stability
     let volatility = LevelVolatility.Verify currentLevel state.PreviousLevel
@@ -117,11 +117,11 @@ let rec parseReport state =
 
 unCheckedReports
 |> List.map (ParsingReportState.Create >> parseReport)
-|> List.filter(fun result ->
-    match result with 
-    | Safe _ -> false
-    | Unsafe (a, b) -> 
-        match b with
-        | UnstableAndVolatile _ -> true 
-        | _ -> false
-)
+// |> List.filter(fun result ->
+//     match result with 
+//     | Safe _ -> false
+//     | Unsafe (a, b) -> 
+//         match b with
+//         | UnstableAndVolatile _ -> true 
+//         | _ -> false
+// )
