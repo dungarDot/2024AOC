@@ -122,4 +122,5 @@ unCheckedReports
     | Safe _ -> true 
     | Unsafe _ -> false
 )
+|> List.length
 
