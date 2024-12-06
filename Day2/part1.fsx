@@ -16,34 +16,21 @@ type Stability =
 
 module Stability = 
     // make active pattern?
-    let private stabLogic current previous greater lesser same =
+    let private stabLogic current previous greaterOutcome lesserOutcome sameOutcome =
         if current > previous then 
-            greater 
+            greaterOutcome
+        elif current < previous then 
+            lesserOutcome
+        else 
+            sameOutcome
 
     let Verify current previous stability =
         match stability with 
-        | StartingStability -> 
-            if current > previous then 
-                Increasing
-            elif current < previous then 
-                Decreasing
-            else 
-                NoMovement
-        | Increasing -> 
-            if current > previous then 
-                Increasing
-            elif current < previous then 
-                Unstable
-            else 
-                Increasing // Can only return no movement on the first parse as keeping the previous state would be the most useful information otherwise.
-        | Decreasing -> 
-            if current > previous then 
-                Unstable
-            elif current < previous then 
-                Decreasing
-            else 
-                Decreasing 
-        | Unstable -> failwith "should not match?"
+        | StartingStability -> stabLogic current previous Increasing Decreasing NoMovement
+        | Increasing -> stabLogic current previous Increasing Decreasing Increasing
+        | Decreasing -> stabLogic current previous Unstable Decreasing Decreasing
+        | Unstable
+        | NoMovement -> failwith "should not match?"
 
 // Allows invalid states grrrr.
 type LevelVolatility =
