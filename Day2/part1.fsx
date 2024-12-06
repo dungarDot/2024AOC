@@ -82,7 +82,7 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
-let errorsFalseSafe = 
+let errorsFalseSafe : UnCheckedReports = 
     [
         [9; 10; 11; 12; 11; 8]
         [59; 60; 57; 58; 56; 56]
