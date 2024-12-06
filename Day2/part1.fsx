@@ -83,11 +83,6 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
-let errorsFalseSafe : UnCheckedReports = 
-    [
-        [10; 7; 8; 8; 7]
-    ]
-
 let checkSafety  stability volatility state currentLevel f =
     match stability, volatility with 
     // Error states, ideally should refactor so these aren't even possible
@@ -124,11 +119,11 @@ let rec parseReport state =
             WithinBounds
     checkSafety stability volatility state currentLevel parseReport
 
-errorsFalseSafe
+unCheckedReports
 |> List.map (ParsingReportState.Create >> parseReport)
 |> List.filter(fun result ->
     match result with 
-    | Safe _ -> false 
-    | Unsafe _ -> true
+    | Safe _ -> true 
+    | Unsafe _ -> false
 )
 
