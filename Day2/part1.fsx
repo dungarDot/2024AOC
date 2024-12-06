@@ -114,6 +114,7 @@ let checkSafety  stability volatility state currentLevel f =
             f { state with Stability = stability; PreviousLevel = currentLevel }
 
 let rec parseReport state = 
+    printfn "%A" state
     let currentLevel, newState =
         if state.Stability = StartingStability then
             state.OriginalReport.Tail.Head,
