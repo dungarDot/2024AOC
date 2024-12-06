@@ -94,45 +94,51 @@ let errorsFalseSafe : UnCheckedReports =
         // [94; 95; 93; 91; 93]
     ]
 
-let rec parseReport state = 
-    let currentState = {state with RemainingReport = state.RemainingReport.Tail}
-    let currentLevel= state.RemainingReport.Head
-    printfn "%A" currentState
-    printfn "%A" currentLevel
-
-    let stability = Stability.Verify currentLevel currentState.PreviousLevel currentState.Stability
-    let volatility = 
-        if currentState.Stability <> StartingStability then 
-            LevelVolatility.Verify currentLevel currentState.PreviousLevel
-        else 
-            WithinBounds
-
-    printfn "%A" stability
-    printfn "%A" volatility
-
+let checkSafety  stability volatility state currentLevel f =
     match stability, volatility with 
     // Error states, ideally should refactor so these aren't even possible
     | StartingStability, _ -> failwith "matched starting stability on the parseReport function which should not be possible"
     | NoMovement, WithinBounds -> failwith "matched NoMovement, WithinBounds which should not be possible"
     // Unsafe states
     | Unstable , JumpGreaterThan3
-    | Unstable, NoChangeBetweenLevels  -> Unsafe(currentState.OriginalReport, UnstableAndVolatile volatility)
-    | Unstable, WithinBounds -> Unsafe(currentState.OriginalReport, UnsafeStability)
-    | _, JumpGreaterThan3 -> Unsafe(currentState.OriginalReport, Volatile volatility)
-    | _, NoChangeBetweenLevels -> Unsafe(currentState.OriginalReport, Volatile volatility)
+    | Unstable, NoChangeBetweenLevels  -> Unsafe(state.OriginalReport, UnstableAndVolatile volatility)
+    | Unstable, WithinBounds -> Unsafe(state.OriginalReport, UnsafeStability)
+    | _, JumpGreaterThan3 -> Unsafe(state.OriginalReport, Volatile volatility)
+    | _, NoChangeBetweenLevels -> Unsafe(state.OriginalReport, Volatile volatility)
     // Safe states
     | Increasing, WithinBounds
     | Decreasing, WithinBounds -> 
-        if currentState.RemainingReport.Length = 0 then 
-            Safe (currentState.OriginalReport, currentState.Stability)
+        if state.RemainingReport.Length = 0 then 
+            Safe (state.OriginalReport, state.Stability)
         else 
-            parseReport { currentState with Stability = stability; PreviousLevel = currentLevel }
+            f { state with Stability = stability; PreviousLevel = currentLevel }
+
+let rec parseReport state = 
+    let currentLevel, newState =
+        if state.Stability = StartingStability then
+            state.OriginalReport.Tail.Head,
+            { state with 
+                PreviousLevel = state.OriginalReport.Head
+                RemainingReport = state.OriginalReport.Tail
+                }
+        else
+            state.RemainingReport.Head, { state with RemainingReport = state.RemainingReport.Tail }
+    
+    printfn "%A" (currentLevel, newState)
+
+    let stability = Stability.Verify currentLevel newState.PreviousLevel newState.Stability
+    let volatility = 
+        if newState.Stability <> StartingStability then 
+            LevelVolatility.Verify currentLevel newState.PreviousLevel
+        else 
+            WithinBounds
+    checkSafety stability volatility newState currentLevel parseReport
 
 errorsFalseSafe
 |> List.map (ParsingReportState.Create >> parseReport)
 |> List.filter(fun result ->
     match result with 
-    | Safe _ -> true 
-    | Unsafe _ -> false
+    | Safe _ -> false 
+    | Unsafe _ -> true
 )
 
