@@ -44,8 +44,7 @@ type LevelVolatility =
     | NoChangeBetweenLevels
 
 module LevelVolatility =
-    // Make active pattern?
-    let Verify current previous  =
+    let (|CheckType|) (current:Level, previous:Level) : LevelVolatility =
         let diff = abs(current - previous)
         if diff = 0 then 
             NoChangeBetweenLevels
@@ -53,7 +52,7 @@ module LevelVolatility =
             JumpGreaterThan3
         else
             WithinBounds
-
+    
 type FailureReasons =
     | UnsafeStability
     | Volatile of LevelVolatility
@@ -99,7 +98,8 @@ let unCheckedReports : UnCheckedReports =
     )
     |> Seq.toList
 
-let checkSafety  stability volatility state currentLevel f =
+let checkSafety  stability volatility state (currentLevel:Level) (previousLevel:Level) f =
+
     match stability, volatility with 
     // Error states, ideally should refactor so these aren't even possible
     | StartingStability, _ -> failwith "matched starting stability on the parseReport function which should not be possible"
@@ -125,11 +125,12 @@ let checkSafety  stability volatility state currentLevel f =
 
 let rec parseReport state = 
     let currentLevel = state.RemainingReport.Head
-    // printfn "%A" (currentLevel, state)
-    
     let stability = Stability.Verify currentLevel state.PreviousLevel state.Stability
-    let volatility = LevelVolatility.Verify currentLevel state.PreviousLevel
-    checkSafety stability volatility state currentLevel parseReport
+    let volatility = 
+        match (currentLevel, state.PreviousLevel) with 
+        | LevelVolatility.CheckType lv -> lv
+
+    checkSafety stability volatility state currentLevel state.PreviousLevel parseReport
 
 let output =
     unCheckedReports
