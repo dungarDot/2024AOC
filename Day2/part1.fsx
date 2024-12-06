@@ -101,7 +101,11 @@ let rec parseReport state =
     printfn "%A" currentLevel
 
     let stability = Stability.Verify currentLevel currentState.PreviousLevel currentState.Stability
-    let volatility = LevelVolatility.Verify currentLevel currentState.PreviousLevel
+    let volatility = 
+        if currentState.Stability <> StartingStability then 
+            LevelVolatility.Verify currentLevel currentState.PreviousLevel
+        else 
+            WithinBounds
 
     printfn "%A" stability
     printfn "%A" volatility
@@ -122,7 +126,7 @@ let rec parseReport state =
         if currentState.RemainingReport.Length = 0 then 
             Safe (currentState.OriginalReport, currentState.Stability)
         else 
-            parseReport { currentState with Stability = stability }
+            parseReport { currentState with Stability = stability; PreviousLevel = currentLevel }
 
 errorsFalseSafe
 |> List.map (ParsingReportState.Create >> parseReport)
