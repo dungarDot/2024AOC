@@ -123,7 +123,7 @@ let rec parseReport state =
                 RemainingReport = state.OriginalReport.Tail
                 }
         else
-            state.RemainingReport.Head, { state with RemainingReport = state.RemainingReport.Tail }
+            state.RemainingReport.Tail.Head, { state with RemainingReport = state.RemainingReport.Tail }
     
     printfn "%A" (currentLevel, newState)
 
