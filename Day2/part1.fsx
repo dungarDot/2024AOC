@@ -129,3 +129,9 @@ let rec parseReport state =
 
 unCheckedReports
 |> List.map (ParsingReportState.Create >> parseReport)
+|> List.filter(fun result ->
+    match result with 
+    | Safe _ -> true 
+    | Unsafe _ -> false
+)
+|> List.length
