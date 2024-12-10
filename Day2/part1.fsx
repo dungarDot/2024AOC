@@ -28,11 +28,7 @@ module Stability =
                 sameOutcome
 
         match stability with 
-        | StartingStability -> 
-            // This currently exists but probably should be removed as the data isn't saved anyways and can't output, but the this branch does occur.
-            // Ideal output probably does carry this all the way through so you can see the "state" of the report when you're done and why it failed.
-            // Thus need to refactor the safe/unsafe returns to likely include state.
-            stabLogic current previous Increasing Decreasing NoMovement  
+        | StartingStability -> stabLogic current previous Increasing Decreasing NoMovement  
         | Increasing -> stabLogic current previous Increasing Unstable Increasing
         | Decreasing -> stabLogic current previous Unstable Decreasing Decreasing
         | Unstable
