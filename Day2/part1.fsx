@@ -115,8 +115,10 @@ let checkSafety  stability volatility state (currentLevel:Level) (previousLevel:
     | Increasing, WithinBounds
     | Decreasing, WithinBounds -> 
         if state.RemainingReport.Length = 1 then 
+            // No more checks required, return report
             Safe (state.OriginalReport, state.Stability)
         else 
+            // remaining checks
             let newState = 
                 { state with 
                     Stability = stability
@@ -141,3 +143,4 @@ let output =
             >> CheckedReport.ToString)
 
 File.WriteAllLines("./Day2/output.txt", output)
+
